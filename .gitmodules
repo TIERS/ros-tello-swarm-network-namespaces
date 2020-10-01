@@ -1,0 +1,3 @@
+[submodule "tello_driver"]
+	path = tello_driver
+	url = https://github.com/appie-17/tello_driver

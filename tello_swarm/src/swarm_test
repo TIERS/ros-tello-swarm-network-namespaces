@@ -1,0 +1,156 @@
+#!/usr/bin/env python2
+
+import time
+import rospy
+from std_msgs.msg import Empty, UInt8, Bool
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+
+MAX_POS_ERROR = 0.2
+BASE_SPEED = 0.2
+
+class TelloController():
+
+	def __init__(self, i, ns, x, y) :
+
+		self.id = i
+		self.ns = ns # ROS namespace
+
+		self.x0 = x
+		self.y0 = y
+		self.z0 = 0
+
+		self.x = x
+		self.y = y
+		self.z = 0
+
+		self.obj_x = x
+		self.obj_y = y
+		self.obj_z = 0
+
+		self.takeoff_pub = rospy.Publisher('/{}/tello/takeoff'.format(self.ns), Empty, queue_size=10)
+		self.land_pub = rospy.Publisher('/{}/tello/land'.format(self.ns), Empty, queue_size=10)
+
+		self.vel_pub = rospy.Publisher('/{}/tello/cmd_vel'.format(self.ns), Twist, queue_size=10)
+		self.sub_odom = rospy.Subscriber('/{}/tello/odom'.format(self.ns), Odometry, self.cb_odom)
+
+		rospy.loginfo('Tello controller for drone {} in network namespace {} is ready.'.format(self.id, self.ns))
+
+	def cb_odom(self, msg) :
+		self.x = msg.pose.pose.position.x
+		self.y = msg.pose.pose.position.y
+		self.z = msg.pose.pose.position.z
+
+		# TODO Move this away from here !!
+		self.set_speed()
+
+	def set_objective(self, x, y, z) :
+		self.obj_x = x-self.x0
+		self.obj_y = y-self.y0
+		self.obj_z = z
+
+	def set_speed(self) :
+
+		# Message template
+		twist = Twist()
+
+		#
+		#	VERY simple approach for proof of concept
+		#
+		#		- First move to appropriate altitude
+		#		- Then move in XY plane
+		#
+
+		twist.linear.x = 0
+		twist.linear.y = 0
+		twist.linear.z = 0
+
+		if self.z < self.obj_z - MAX_POS_ERROR :
+			twist.linear.z = BASE_SPEED
+
+		elif self.z > self.obj_z + MAX_POS_ERROR :
+			twist.linear.z = -BASE_SPEED
+
+		else :
+			if self.x < self.obj_x - MAX_POS_ERROR :
+				twist.linear.x = BASE_SPEED
+
+			elif self.x > self.obj_x + MAX_POS_ERROR :
+				twist.linear.x = -BASE_SPEED
+
+			if self.y < self.obj_y - MAX_POS_ERROR :
+				twist.linear.x = BASE_SPEED
+
+			elif self.y > self.obj_y + MAX_POS_ERROR :
+				twist.linear.x = -BASE_SPEED
+
+		# No rotation	
+		twist.angular.x = 0
+		twist.angular.y = 0
+		twist.angular.z = 0
+
+		# Publish
+		self.vel_pub.publish(twist)
+		
+
+	def takeoff(self) :
+		msg = Empty()
+		for i in range(5) :
+			self.takeoff_pub.publish(msg)
+			time.sleep(0.1)
+
+	def land(self) :
+		msg = Empty()
+		for i in range(5) :
+			self.land_pub.publish(msg)
+			time.sleep(0.1)
+
+
+
+class TelloSwarm():
+
+	def __init__(self, num, initial_pos, objective_pos) :
+
+		assert num > 0
+		assert num <= len(initial_pos)
+		assert num <= len(objective_pos)
+
+		self.drones = []
+		for i in range(num) :
+			self.drones.append(
+				TelloController(i, "ns{}".format(i+1), initial_pos[i][0], initial_pos[i][1])
+			)
+			self.drones[i].set_objective(objective_pos[i][0], objective_pos[i][1], objective_pos[i][2])
+
+		time.sleep(2)
+
+		for drone in self.drones :
+			drone.takeoff()
+
+
+def main():
+	rospy.init_node('tello_swarm_node')
+
+	num_of_drones = 1
+	
+	initial_positions = [
+		[0,0],
+		[1,0]
+	]
+
+	objective_positions = [
+		[0,1,1],
+		[1,1,1]
+	]
+
+	swarm = TelloSwarm(num_of_drones, initial_positions, objective_positions)
+	rospy.spin()
+
+	for drone in swarm.drones :
+		drone.land()
+
+	print("Bye Bye ! ;)")
+
+
+if __name__ == '__main__':
+	main()
