@@ -1,4 +1,4 @@
-# ros-tello-swarm
+# ros-tello-swarm (with network namespaces)
 
 ## EDIT
 
