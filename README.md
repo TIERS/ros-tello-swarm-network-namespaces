@@ -1,5 +1,12 @@
 # ros-tello-swarm
 
+## EDIT
+
+This repo is no longer under development. The instructions for network namespaces are still mostly valid for connecting multiple Tello drones (the original Tello which cannot be connected to an external WiFi AP). Development has moved to [https://github.com/TIERS/uwb-tello-swam](https://github.com/TIERS/uwb-tello-swam) using Tello EDU drones and UWB-aided localization.
+{: .alert .alert-danger}
+
+------
+
 Create drone swarms using Tello drones with ROS (even with the basic Tello model). Formation control is possible with either UWB-based positioning or onboard odomtry (for simple scenarios).
 
 If you are using the Tello EDU, then you can simply connect all drones to a single network.
