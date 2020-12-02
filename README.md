@@ -2,8 +2,7 @@
 
 ## EDIT
 
-This repo is no longer under development. The instructions for network namespaces are still mostly valid for connecting multiple Tello drones (the original Tello which cannot be connected to an external WiFi AP). Development has moved to [https://github.com/TIERS/uwb-tello-swam](https://github.com/TIERS/uwb-tello-swam) using Tello EDU drones and UWB-aided localization.
-{: .alert .alert-danger}
+> :warning: **This repo is no longer under development.** The instructions for network namespaces are still mostly valid for connecting multiple Tello drones (the original Tello which cannot be connected to an external WiFi AP). Development has moved to [https://github.com/TIERS/uwb-tello-swam](https://github.com/TIERS/uwb-tello-swam) using Tello EDU drones and UWB-aided localization.
 
 ------
 
